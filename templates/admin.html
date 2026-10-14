@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>QuizMate Admin Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+
+        <h1>QuizMate Admin</h1>
+        <h2>Admin Dashboard</h2>
+
+        <p>Manage your quiz system from one place.</p>
+
+        <!-- Dashboard Statistics -->
+        <div class="dashboard-cards">
+
+            <div class="dashboard-card">
+                <h3>📚 Total Subjects</h3>
+                <h2>{{ total_subjects }}</h2>
+            </div>
+
+            <div class="dashboard-card">
+                <h3>📝 Total Questions</h3>
+                <h2>{{ total_questions }}</h2>
+            </div>
+
+            <div class="dashboard-card">
+                <h3>👥 Total Students</h3>
+                <h2>{{ total_students }}</h2>
+            </div>
+
+            <div class="dashboard-card">
+                <h3>📊 Quiz Results</h3>
+                <h2>{{ total_results }}</h2>
+            </div>
+
+        </div>
+
+        <!-- Dashboard Actions -->
+        <div class="dashboard-actions">
+
+            <a href="{{ url_for('add_question') }}"
+               class="dashboard-button">
+                ➕ Add New Question
+            </a>
+
+            <a href="{{ url_for('add_subject') }}"
+               class="dashboard-button">
+                📚 Add New Subject
+            </a>
+
+            <a href="{{ url_for('manage_questions') }}"
+               class="dashboard-button">
+                📝 Manage Questions
+            </a>
+
+            <a href="{{ url_for('admin_all_results') }}"
+               class="dashboard-button">
+                📊 View All Student Results
+            </a>
+
+            <a href="{{ url_for('home') }}"
+               class="dashboard-button secondary-button">
+                🏠 Back to Home
+            </a>
+
+            <a href="{{ url_for('admin_logout') }}"
+               class="dashboard-button secondary-button">
+                🚪 Logout
+            </a>
+
+        </div>
+
+    </div>
+</body>
+</html>

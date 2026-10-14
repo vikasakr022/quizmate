@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Quiz Questions - QuizMate</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>QuizMate</h1>
+
+        <h2 id="question-number">Loading questions...</h2>
+
+        <p id="question-text">Please wait...</p>
+
+        <div id="options">
+            <!-- Options will appear here -->
+        </div>
+
+        <p id="feedback"></p>
+
+        <button id="next-button" onclick="nextQuestion()" disabled>
+            Next Question
+        </button>
+
+        <h2 id="result" style="display:none;"></h2>
+
+        <br>
+
+        <a href="/subjects-page">
+            <button type="button">Back to Subjects</button>
+        </a>
+
+    </div>
+
+    <script>
+        const subjectId = "{{ subject_id }}";
+
+        let questions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        async function loadQuestions() {
+            try {
+                const response = await fetch(
+                    `/api/questions?subject_id=${encodeURIComponent(subjectId)}`
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Unable to load questions");
+                }
+
+                if (!Array.isArray(data) || data.length === 0) {
+                    document.getElementById("question-number").textContent =
+                        "No questions available";
+
+                    document.getElementById("question-text").textContent =
+                        "No questions have been added for this subject yet.";
+
+                    document.getElementById("options").innerHTML = "";
+                    document.getElementById("next-button").style.display = "none";
+
+                    return;
+                }
+
+                questions = data;
+                showQuestion();
+
+            } catch (error) {
+                document.getElementById("question-number").textContent =
+                    "Unable to load questions";
+
+                document.getElementById("question-text").textContent =
+                    error.message;
+
+                document.getElementById("next-button").style.display = "none";
+            }
+        }
+
+        function showQuestion() {
+            answered = false;
+
+            const question = questions[currentIndex];
+
+            document.getElementById("question-number").textContent =
+                `Question ${currentIndex + 1} of ${questions.length}`;
+
+            document.getElementById("question-text").textContent =
+                question.question_text;
+
+            document.getElementById("feedback").textContent = "";
+
+            const optionsContainer = document.getElementById("options");
+            optionsContainer.innerHTML = "";
+
+            const options = [
+                { key: "A", value: question.option_a },
+                { key: "B", value: question.option_b },
+                { key: "C", value: question.option_c },
+                { key: "D", value: question.option_d }
+            ];
+
+            options.forEach(option => {
+                if (!option.value) return;
+
+                const button = document.createElement("button");
+
+                button.type = "button";
+                button.className = "quiz-option";
+                button.textContent = `${option.key}. ${option.value}`;
+
+                button.style.display = "block";
+                button.style.width = "100%";
+                button.style.margin = "10px 0";
+
+                button.onclick = () => selectAnswer(
+                    option.key,
+                    option.value,
+                    button
+                );
+
+                optionsContainer.appendChild(button);
+            });
+
+            document.getElementById("next-button").disabled = true;
+
+            document.getElementById("next-button").textContent =
+                currentIndex === questions.length - 1
+                    ? "Finish Quiz"
+                    : "Next Question";
+        }
+
+        function selectAnswer(selectedKey, selectedValue, selectedButton) {
+            if (answered) return;
+
+            answered = true;
+
+            const question = questions[currentIndex];
+            const correctAnswer = String(question.correct_answer || "")
+                .trim()
+                .toLowerCase();
+
+            const correctOptions = {
+                A: String(question.option_a || "").trim().toLowerCase(),
+                B: String(question.option_b || "").trim().toLowerCase(),
+                C: String(question.option_c || "").trim().toLowerCase(),
+                D: String(question.option_d || "").trim().toLowerCase()
+            };
+
+            const isCorrect =
+                correctAnswer === selectedKey.toLowerCase() ||
+                correctAnswer === selectedValue.trim().toLowerCase() ||
+                correctOptions[selectedKey] === correctAnswer;
+
+            if (isCorrect) {
+                score++;
+
+                document.getElementById("feedback").textContent =
+                    "Correct answer! 🎉";
+            } else {
+                document.getElementById("feedback").textContent =
+                    `Incorrect. Correct answer: ${question.correct_answer}`;
+            }
+
+            selectedButton.style.border = "3px solid #2563eb";
+
+            document.getElementById("next-button").disabled = false;
+        }
+
+        function nextQuestion() {
+            if (!answered) return;
+
+            currentIndex++;
+
+            if (currentIndex < questions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById("question-number").textContent =
+                "Quiz Completed!";
+
+            document.getElementById("question-text").textContent =
+                "Great job completing the quiz!";
+
+            document.getElementById("options").innerHTML = "";
+
+            document.getElementById("feedback").textContent = "";
+
+            document.getElementById("result").style.display = "block";
+
+            document.getElementById("result").textContent =
+                `Your Score: ${score} / ${questions.length}`;
+
+            document.getElementById("next-button").style.display = "none";
+        }
+
+        loadQuestions();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>QuizMate - Manage Questions</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .question-card {
+            text-align: left;
+            padding: 18px;
+            margin-bottom: 15px;
+            border: 1px solid #dbeafe;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+
+        .delete-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .delete-btn:hover {
+            background: #991b1b;
+        }
+
+        .message {
+            margin: 15px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container" style="max-width: 1000px;">
+
+    <h1>QuizMate Admin</h1>
+
+    <h2>Manage Questions</h2>
+
+    <p>View and manage questions from all subjects.</p>
+
+    <label for="subjectFilter">Filter by Subject</label>
+
+    <select id="subjectFilter" onchange="loadQuestions()">
+        <option value="">All Subjects</option>
+
+        {% for subject in subjects %}
+        <option value="{{ subject.subject_id }}">
+            {{ subject.subject_name }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <div id="message" class="message" role="status"></div>
+
+    <div id="questionList" style="margin-top: 25px;">
+        Loading questions...
+    </div>
+
+    <br>
+
+    <a href="{{ url_for('admin') }}">Back to Dashboard</a>
+
+    <br><br>
+
+    <a href="{{ url_for('add_question') }}">Add New Question</a>
+
+</div>
+
+<script>
+async function loadQuestions() {
+    const subjectId =
+        document.getElementById("subjectFilter").value;
+
+    const list = document.getElementById("questionList");
+
+    list.textContent = "Loading questions...";
+
+    try {
+        let url = "/api/questions";
+
+        if (subjectId) {
+            url += "?subject_id=" + encodeURIComponent(subjectId);
+        }
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error("Unable to load questions");
+        }
+
+        const questions = await response.json();
+
+        list.replaceChildren();
+
+        if (!Array.isArray(questions) || questions.length === 0) {
+            list.textContent =
+                "No questions found for this subject.";
+            return;
+        }
+
+        questions.forEach((q, index) => {
+            const card = document.createElement("div");
+            card.className = "question-card";
+
+            const title = document.createElement("h3");
+            title.textContent =
+                (index + 1) + ". " + q.question_text;
+
+            const options = document.createElement("p");
+            options.style.whiteSpace = "pre-line";
+
+            options.textContent =
+                "A: " + q.option_a + "\n" +
+                "B: " + q.option_b + "\n" +
+                "C: " + q.option_c + "\n" +
+                "D: " + q.option_d;
+
+            const answer = document.createElement("p");
+            answer.textContent =
+                "Correct option: " + q.correct_answer;
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.className = "delete-btn";
+            deleteButton.textContent = "Delete Question";
+
+            deleteButton.addEventListener("click", async function () {
+                const confirmed = confirm(
+                    "Are you sure you want to delete this question?"
+                );
+
+                if (!confirmed) {
+                    return;
+                }
+
+                deleteButton.disabled = true;
+                deleteButton.textContent = "Deleting...";
+
+                try {
+                    const deleteResponse = await fetch(
+                        "/admin/delete-question/" +
+                        encodeURIComponent(q.question_id),
+                        {
+                            method: "POST"
+                        }
+                    );
+
+                    const result = await deleteResponse.json();
+
+                    if (!deleteResponse.ok) {
+                        throw new Error(
+                            result.error || "Could not delete question."
+                        );
+                    }
+
+                    document.getElementById("message").textContent =
+                        result.message || "Question deleted successfully!";
+
+                    document.getElementById("message").style.color =
+                        "green";
+
+                    await loadQuestions();
+
+                } catch (error) {
+                    document.getElementById("message").textContent =
+                        error.message;
+
+                    document.getElementById("message").style.color =
+                        "red";
+
+                    deleteButton.disabled = false;
+                    deleteButton.textContent = "Delete Question";
+                }
+            });
+
+            card.append(title, options, answer, deleteButton);
+            list.appendChild(card);
+        });
+
+    } catch (error) {
+        list.textContent =
+            "Could not load questions. Please check the Flask server.";
+    }
+}
+
+loadQuestions();
+</script>
+
+</body>
+</html>

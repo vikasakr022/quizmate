@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>QuizMate - Subjects</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>QuizMate</h1>
+        <h2>Select Your Subject</h2>
+
+        <div class="subjects">
+
+            {% for subject in subjects %}
+            <div class="subject-card">
+
+                <h3>{{ subject.subject_name }}</h3>
+
+                <a href="/quiz/{{ subject.subject_id }}">
+                    <button type="button">Start Quiz</button>
+                </a>
+
+            </div>
+            {% endfor %}
+
+        </div>
+
+        <br>
+        <a href="/">Back to Home</a>
+
+    </div>
+
+</body>
+</html>

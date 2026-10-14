@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizMate - Quiz</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="container">
+        <h1>QuizMate</h1>
+        <h2>Start Your Quiz!</h2>
+
+        {% if questions %}
+            <form action="/submit-quiz" method="POST">
+
+                <input type="hidden"
+                       name="subject_id"
+                       value="{{ subject_id }}">
+
+                {% for question in questions %}
+                    <div class="question">
+                        <h3>
+                            {{ loop.index }}. {{ question.question_text }}
+                        </h3>
+
+                        <label>
+                            <input type="radio"
+                                   name="question_{{ question.question_id }}"
+                                   value="1"
+                                   required>
+                            {{ question.option_a }}
+                        </label><br>
+
+                        <label>
+                            <input type="radio"
+                                   name="question_{{ question.question_id }}"
+                                   value="2">
+                            {{ question.option_b }}
+                        </label><br>
+
+                        <label>
+                            <input type="radio"
+                                   name="question_{{ question.question_id }}"
+                                   value="3">
+                            {{ question.option_c }}
+                        </label><br>
+
+                        <label>
+                            <input type="radio"
+                                   name="question_{{ question.question_id }}"
+                                   value="4">
+                            {{ question.option_d }}
+                        </label><br><br>
+                    </div>
+                {% endfor %}
+
+                <button type="submit">Submit Quiz</button>
+            </form>
+
+        {% else %}
+            <p>No questions available for this subject.</p>
+        {% endif %}
+
+        <br>
+        <a href="/subjects-page">Back to Subjects</a>
+    </div>
+
+</body>
+</html>
