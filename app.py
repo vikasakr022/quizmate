@@ -6,6 +6,9 @@ import mysql.connector
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get(
@@ -170,7 +173,6 @@ def add_subject():
     methods=["POST"]
 )
 def delete_question(question_id):
-
     if not session.get("admin_logged_in"):
         return jsonify({
             "error": "Lecturer login required."
@@ -183,7 +185,6 @@ def delete_question(question_id):
         db = get_db_connection()
         cursor = db.cursor()
 
-        # Check whether the question exists
         cursor.execute(
             "SELECT question_id FROM questions WHERE question_id = %s",
             (question_id,)
@@ -196,7 +197,6 @@ def delete_question(question_id):
                 "error": "Question not found."
             }), 404
 
-        # Delete the selected question
         cursor.execute(
             "DELETE FROM questions WHERE question_id = %s",
             (question_id,)
@@ -208,7 +208,7 @@ def delete_question(question_id):
             "message": "Question deleted successfully!"
         }), 200
 
-    except Exception as e:
+    except Exception:
         if db:
             db.rollback()
 

@@ -221,3 +221,103 @@ a:hover {
         grid-template-columns: 1fr;
     }
 }
+/* QUIZMATE MOBILE IMPROVEMENTS */
+
+html {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* Subject and question cards */
+.subject-card,
+.question-card {
+    width: 100%;
+    max-width: 100%;
+    margin: 15px auto;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* Buttons fit mobile screens */
+button,
+.dashboard-button {
+    max-width: 100%;
+    min-height: 44px;
+}
+
+/* Quiz options */
+input[type="radio"],
+input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+}
+
+/* Tables scroll on small screens */
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Mobile screen */
+@media screen and (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 100%;
+        padding: 22px 15px;
+        margin: 10px auto;
+        border-radius: 14px;
+    }
+
+    h1 {
+        font-size: 28px;
+        overflow-wrap: anywhere;
+    }
+
+    h2 {
+        font-size: 21px;
+    }
+
+    p {
+        font-size: 15px;
+    }
+
+    input,
+    select,
+    textarea {
+        width: 100%;
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    button,
+    .dashboard-button {
+        width: 100%;
+        padding: 13px;
+        font-size: 15px;
+    }
+
+    .dashboard-cards {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .dashboard-card {
+        padding: 20px 12px;
+    }
+
+    .subject-card,
+    .question-card {
+        padding: 16px 12px;
+    }
+}
