@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>QuizMate - Student Results</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+
+        <h1>QuizMate</h1>
+        <h2>All Student Results</h2>
+
+        <p>View students' quiz scores and performance.</p>
+
+        {% if results %}
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Email</th>
+                        <th>Subject</th>
+                        <th>Score</th>
+                        <th>Total Questions</th>
+                        <th>Completed At</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td>{{ result.student_name }}</td>
+                        <td>{{ result.student_email }}</td>
+                        <td>{{ result.subject_name }}</td>
+                        <td>{{ result.score }}</td>
+                        <td>{{ result.total_questions }}</td>
+                        <td>{{ result.completed_at }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% else %}
+
+        <p>No quiz results available yet.</p>
+
+        {% endif %}
+
+        <br>
+
+        <a href="{{ url_for('admin') }}"
+           class="dashboard-button">
+            Back to Admin Dashboard
+        </a>
+
+    </div>
+</body>
+</html>

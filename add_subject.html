@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Manage Subjects - QuizMate</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .subject-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            margin: 12px 0;
+            border: 1px solid #dbeafe;
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+
+        .delete-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background: #991b1b;
+        }
+
+        .message {
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .subject-card {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>QuizMate</h1>
+    <h2>Manage Subjects</h2>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <p class="message">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <h3>Add New Subject</h3>
+
+    <form method="POST" action="{{ url_for('add_subject') }}">
+
+        <label for="subject_name">Subject Name</label>
+
+        <input
+            type="text"
+            id="subject_name"
+            name="subject_name"
+            placeholder="Enter subject name"
+            required
+        >
+
+        <button type="submit">Add Subject</button>
+
+    </form>
+
+    <hr>
+
+    <h3>Existing Subjects</h3>
+
+    <div id="message" class="message" role="status"></div>
+
+    <div id="subjectList">
+        Loading subjects...
+    </div>
+
+    <br>
+
+    <a href="{{ url_for('admin') }}">Back to Admin Dashboard</a>
+
+</div>
+
+<script>
+async function loadSubjects() {
+    const list = document.getElementById("subjectList");
+
+    list.textContent = "Loading subjects...";
+
+    try {
+        const response = await fetch("/api/subjects");
+
+        if (!response.ok) {
+            throw new Error("Unable to load subjects.");
+        }
+
+        const subjects = await response.json();
+
+        list.replaceChildren();
+
+        if (!Array.isArray(subjects) || subjects.length === 0) {
+            list.textContent = "No subjects available.";
+            return;
+        }
+
+        subjects.forEach(function(subject) {
+            const card = document.createElement("div");
+            card.className = "subject-card";
+
+            const name = document.createElement("span");
+            name.textContent = subject.subject_name;
+
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "delete-btn";
+            button.textContent = "Delete Subject";
+
+            button.addEventListener("click", async function() {
+                const confirmed = confirm(
+                    "Delete subject '" + subject.subject_name +
+                    "'? This cannot be undone."
+                );
+
+                if (!confirmed) {
+                    return;
+                }
+
+                button.disabled = true;
+                button.textContent = "Deleting...";
+
+                try {
+                    const deleteResponse = await fetch(
+                        "/admin/delete-subject/" +
+                        encodeURIComponent(subject.subject_id),
+                        { method: "POST" }
+                    );
+
+                    const result = await deleteResponse.json();
+
+                    const message =
+                        document.getElementById("message");
+
+                    message.textContent =
+                        result.message || result.error ||
+                        "Request completed.";
+
+                    message.style.color =
+                        deleteResponse.ok ? "green" : "red";
+
+                    if (deleteResponse.ok) {
+                        await loadSubjects();
+                    } else {
+                        button.disabled = false;
+                        button.textContent = "Delete Subject";
+                    }
+
+                } catch (error) {
+                    document.getElementById("message").textContent =
+                        "Could not delete subject. Check the Flask server.";
+
+                    document.getElementById("message").style.color = "red";
+
+                    button.disabled = false;
+                    button.textContent = "Delete Subject";
+                }
+            });
+
+            card.append(name, button);
+            list.appendChild(card);
+        });
+
+    } catch (error) {
+        list.textContent =
+            "Could not load subjects. Please check the Flask server.";
+    }
+}
+
+loadSubjects();
+</script>
+
+</body>
+</html>

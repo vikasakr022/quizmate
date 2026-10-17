@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>QuizMate - Smart Quiz Application</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>QuizMate</h1>
+
+        <h2>Welcome to QuizMate!</h2>
+
+        <p>Smart Quiz & Student Performance Analytics</p>
+
+        <div class="login-options">
+            <a href="{{ url_for('student_login') }}"
+                <button type="button">Student Login</button>
+            </a>
+
+            <br><br>
+
+            <a href="/admin/login">
+                <button type="button">Lecturer Login</button>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

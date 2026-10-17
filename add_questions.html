@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizMate - Add Question</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>QuizMate Admin</h1>
+    <h2>Add New Question</h2>
+    <p>Add a multiple-choice question to your quiz database.</p>
+
+    {% if request.args.get('success') == '1' %}
+        <p style="color: green;">
+            Question added successfully!
+        </p>
+    {% endif %}
+
+    <form action="{{ url_for('add_question') }}" method="POST">
+
+        <label for="subject">Select Subject</label>
+        <select id="subject" name="subject" required>
+            <option value="">Choose Subject</option>
+
+            {% for subject in subjects %}
+                <option value="{{ subject.subject_id }}">
+                    {{ subject.subject_name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="question_text">Question</label>
+        <textarea id="question_text"
+                  name="question_text"
+                  placeholder="Enter your question"
+                  required></textarea>
+
+        <label for="option_a">Option 1</label>
+        <input id="option_a" name="option_a"
+               placeholder="Enter option 1" required>
+
+        <label for="option_b">Option 2</label>
+        <input id="option_b" name="option_b"
+               placeholder="Enter option 2" required>
+
+        <label for="option_c">Option 3</label>
+        <input id="option_c" name="option_c"
+               placeholder="Enter option 3" required>
+
+        <label for="option_d">Option 4</label>
+        <input id="option_d" name="option_d"
+               placeholder="Enter option 4" required>
+
+        <label for="correct_answer">Correct Answer</label>
+        <select id="correct_answer"
+                name="correct_answer" required>
+            <option value="">Choose Correct Option</option>
+            <option value="1">Option 1</option>
+            <option value="2">Option 2</option>
+            <option value="3">Option 3</option>
+            <option value="4">Option 4</option>
+        </select>
+
+        <button type="submit">Add Question</button>
+    </form>
+
+    <br>
+    <a href="{{ url_for('manage_questions') }}">Manage Questions</a>
+    <br>
+    <a href="{{ url_for('admin') }}">Back to Dashboard</a>
+    <br>
+    <a href="{{ url_for('home') }}">Go to Home</a>
+</div>
+
+</body>
+</html>
