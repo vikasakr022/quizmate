@@ -1,10 +1,15 @@
 from flask import (
-    Flask, render_template, request, jsonify,
-    redirect, url_for, session, flash
+    Flask, render_template, request,
+    redirect, url_for, session, jsonify, flash,
+    send_file
 )
+
+from openpyxl import Workbook
+from io import BytesIO
+
 import mysql.connector
 from functools import wraps
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash,check_password_hash
 import os
 from dotenv import load_dotenv
 
@@ -29,11 +34,11 @@ ADMIN_PASSWORD_HASH = "scrypt:32768:8:1$5msuI76JdbW6O38N$035a6cc260ccbccb95b0bf6
 # ==========================================
 
 def get_db_connection():
-    return mysql.connector.connect(
+    return mysql.connector.connect(   
         host=os.environ.get("DB_HOST", "127.0.0.1"),
         port=int(os.environ.get("DB_PORT", "3307")),
         user=os.environ.get("DB_USER", "quizmate_app"),
-        password=os.environ.get("DB_PASSWORD", ""),
+        password=os.environ.get("DB_PASSWORD", "QuizMate@2026Safe"),
         database=os.environ.get("DB_NAME", "quizmate_db")
     )
 
@@ -872,15 +877,16 @@ ORDER BY qr.completed_at DESC
         if db:
             db.close()
 
-
 # ==========================================
 # SUBMIT QUIZ
 # ==========================================
 
 @app.route("/submit-quiz", methods=["POST"])
 def submit_quiz():
+
     if not session.get("student_id"):
         return redirect(url_for("student_login"))
+
     subject_id = request.form.get("subject_id", "").strip()
 
     if not subject_id:
@@ -902,6 +908,7 @@ def submit_quiz():
         db = get_db_connection()
         cursor = db.cursor(dictionary=True)
 
+        # Get subject name
         cursor.execute("""
             SELECT subject_name
             FROM subjects
@@ -915,6 +922,7 @@ def submit_quiz():
 
         subject_name = subject["subject_name"]
 
+        # Get questions and correct answers
         cursor.execute("""
             SELECT question_id, correct_answer
             FROM questions
@@ -926,23 +934,30 @@ def submit_quiz():
         if not questions:
             return "No questions available for this quiz.", 400
 
+        # Calculate score
         score = 0
         total_questions = len(questions)
 
         for question in questions:
+
             question_id = str(question["question_id"])
 
             selected_answer = request.form.get(
-                question_id, ""
+                f"question_{question_id}", ""
             ).strip()
 
             correct_answer = str(
                 question["correct_answer"]
             ).strip()
 
+            print("Question ID:", question_id)
+            print("Selected:", repr(selected_answer))
+            print("Correct:", repr(correct_answer))
+
             if selected_answer == correct_answer:
                 score += 1
 
+        # Save quiz result only once
         cursor.execute("""
             INSERT INTO quiz_results (
                 student_id,
@@ -960,6 +975,7 @@ def submit_quiz():
 
         db.commit()
 
+        # Open result page
         return redirect(
             url_for(
                 "results_page",
@@ -970,21 +986,110 @@ def submit_quiz():
         )
 
     except Exception as e:
+
         if db:
             db.rollback()
+
+        print("QUIZ SUBMISSION ERROR:", e)
 
         return f"Error submitting quiz: {e}", 500
 
     finally:
+
         if cursor:
             cursor.close()
+
         if db:
             db.close()
+# ==========================================
+# DOWNLOAD STUDENT RESULTS AS EXCEL
+# ==========================================
 
+@app.route("/admin/download-results")
+def download_results():
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT
+            qr.result_id,
+            qr.student_id,
+            s.name AS student_name,
+            qr.subject_name,
+            qr.score,
+            qr.total_questions,
+            ROUND(
+                (qr.score / NULLIF(qr.total_questions, 0)) * 100,
+                2
+            ) AS percentage,
+            qr.completed_at
+        FROM quiz_results qr
+        LEFT JOIN students s
+            ON qr.student_id = s.student_id
+        ORDER BY qr.completed_at DESC
+    """)
+
+    results = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Student Results"
+
+    sheet.append([
+        "Result ID",
+        "Student ID",
+        "Student Name",
+        "Subject",
+        "Score",
+        "Total Questions",
+        "Percentage",
+        "Completed At"
+    ])
+
+    for row in results:
+        sheet.append([
+            row["result_id"],
+            row["student_id"],
+            row["student_name"] or "Unknown",
+            row["subject_name"],
+            row["score"],
+            row["total_questions"],
+            f'{row["percentage"] or 0}%',
+            str(row["completed_at"] or "")
+        ])
+
+    for column in sheet.columns:
+        max_length = max(
+            len(str(cell.value or "")) for cell in column
+        )
+        sheet.column_dimensions[
+            column[0].column_letter
+        ].width = max_length + 3
+
+    output = BytesIO()
+    workbook.save(output)
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="QuizMate_Student_Results.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 # ==========================================
 # RUN APPLICATION
 # ==========================================
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=5000,
+        debug=True
+    )

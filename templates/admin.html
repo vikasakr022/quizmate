@@ -65,7 +65,10 @@
                class="dashboard-button">
                 📊 View All Student Results
             </a>
-
+<a href="{{ url_for('download_results') }}"
+   class="dashboard-button">
+    📥 Download Student Results (Excel)
+</a>
             <a href="{{ url_for('home') }}"
                class="dashboard-button secondary-button">
                 🏠 Back to Home
